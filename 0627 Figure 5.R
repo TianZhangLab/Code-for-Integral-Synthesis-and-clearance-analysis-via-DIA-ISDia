@@ -70,7 +70,12 @@ plot_cc_bubble_WT <- function(df, df_name,treatment = c("thg", "tun")) {
   } else {
     paste0(df_name, " ", treat_label, "/DMSO")
   }
-  
+  Mito_df$HL_bin <- cut(
+    Mito_df[[hl_col]],
+    breaks = c(-Inf, -5, -2.5, 0, Inf),
+    labels = c("H/L < -5", "-5 <= H/L < -2.5", "-2.5 <= H/L < 0", "H/L >= 0"),
+    right = FALSE  # or TRUE depending on your boundary preference
+  )
   p <-ggplot(all_summary, aes(x = heavy_median, y = light_median)) +
     geom_errorbarh(aes(xmin = heavy_median - heavy_se, xmax = heavy_median + heavy_se),
                    height = 0.005, color = "gray40") +
@@ -408,15 +413,16 @@ Mito_730<- df4_cv%>%
   filter(PG.ProteinAccessions%in% Mito $Entry)
 
 
-library(ggrepel)
 plot_Mito_bubble <- function(Mito_df, df_name, treatment = c("thg", "tun")) {
   treatment <- match.arg(treatment)
+  
 
   light_col  <- paste0("light_", treatment, "_vs_con")
   heavy_col  <- paste0("heavy_", treatment, "_vs_con")
   total_col  <- paste0("total_", treatment, "_vs_con")
   hl_col     <- paste0("HL_", treatment, "_vs_con")
   
+ 
   df_name_map <- list(
     "df3_cv" = "WT",
     "df4_cv" = expression("PERK"^"-/-")
@@ -433,19 +439,32 @@ plot_Mito_bubble <- function(Mito_df, df_name, treatment = c("thg", "tun")) {
     paste0(df_name, " ", treat_label, "/DMSO")
   }
   
-
+  Mito_df <- Mito_df %>%
+    filter(!is.na(.data[[hl_col]]))  
+  
+  Mito_df$HL_bin <- cut(
+    Mito_df[[hl_col]],
+    breaks = c(-Inf, -5, -2.5, 0, Inf),
+    labels = c("H/L < -5", "-5 <= H/L < -2.5", "-2.5 <= H/L < 0", "H/L >= 0"),
+    right = FALSE  # or TRUE depending on your boundary preference
+  )
+ 
   ggplot(Mito_df, aes(x = .data[[heavy_col]], y = .data[[light_col]])) +
-    geom_point(aes(size = .data[[hl_col]], color = .data[[total_col]]), alpha = 0.8) +
-    scale_size(range = c(0.5, 4), limits = c(-5, 3), name = "H/L ratio") +
+    geom_point(
+      aes(shape = HL_bin, color = .data[[total_col]]),
+      size = 2.5, alpha = 0.8
+    ) +
+    scale_shape_manual(values = c(15, 16, 17, 18)) +  
     scale_color_gradient2(
-      low = "darkblue",     
-      mid = "#f7f7f7",     
-      high = "darkred",    
-      midpoint = 0,         
+      low = "darkblue",
+      mid = "#f7f7f7",
+      high = "darkred",
+      midpoint = 0,
       name = "Total log2(FC)",
-      limits = c(-2, 3),     
-      oob = scales::squish   
-    )+
+      limits = c(-2, 3),
+      oob = scales::squish
+    ) +
+    labs(shape = "H/L ratio bin")+
     scale_x_continuous(limits = c(-2.4,3.3))+
     scale_y_continuous(limits = c(-2,6),breaks = c(-2,0,2,4))+
     labs(
@@ -459,11 +478,11 @@ plot_Mito_bubble <- function(Mito_df, df_name, treatment = c("thg", "tun")) {
       panel.grid     = element_blank(),
       panel.border   = element_rect(color = "black", fill = NA),
       axis.line      = element_line(color = "black"),
-      axis.text      = element_text(size = 12),
-      axis.title     = element_text(size = 14),
+      axis.text      = element_text(size = 8),
+      axis.title     = element_text(size = 8),
       legend.position= "top",
       legend.direction = "horizontal",
-      plot.title     = element_text(face = "bold", size = 14, hjust = 0.5)
+      plot.title     = element_text(face = "bold", size = 8, hjust = 0.5)
     )
 }
 p1<-plot_Mito_bubble(Mito_WT, df_name = "df3_cv", treatment = "thg")
@@ -471,10 +490,10 @@ p2<-plot_Mito_bubble(Mito_730, df_name = "df4_cv", treatment = "thg")
 combined_plot <- p1 + p2+  plot_layout(ncol = 2)
 combined_plot
 
-#Mito heavy and total up GO
+#Mito heavy and H+L up in WT GO
 Mito_h_up <- df3_cv%>%
   filter(PG.ProteinAccessions%in% Mito $Entry)%>%
-  filter(heavy_thg_vs_con>0.58& heavy_thg_vs_con_p<0.05,total_thg_vs_con>0.58& total_thg_vs_con_p<0.05)
+  filter(heavy_thg_vs_con>0.58& heavy_thg_vs_con_p<0.05&total_thg_vs_con>0.58& total_thg_vs_con_p<0.05&HL_thg_vs_con>0)
 
 run_go_analysis <- function(df, title_text = "Input") {
   prot_ids <- df$PG.ProteinAccessions
@@ -543,10 +562,10 @@ plot_go_bubble <- function(go_df, top_n = 10, title_text = "GO Enrichment Bubble
 }
 plot_go_bubble(Mito_go , top_n = 10, title_text = "Top GO Terms (BP)")
 
-# Mito total and heavy DOWN GO
+# Mito H+L and heavy DOWN in WT GO
 Mito_t_down <- df3_cv%>%
   filter(PG.ProteinAccessions%in% Mito $Entry)%>%
-  filter(total_thg_vs_con< -0.58& total_thg_vs_con_p<0.05&heavy_thg_vs_con< -0.58& heavy_thg_vs_con_p<0.05)
+  filter(total_thg_vs_con< -0.58& total_thg_vs_con_p<0.05&heavy_thg_vs_con< -0.58& heavy_thg_vs_con_p<0.05&HL_thg_vs_con<0,!(light_thg_vs_con < -0.58 & light_thg_vs_con_p < 0.05))
 
 run_go_analysis <- function(df, title_text = "Input") {
   prot_ids <- df$PG.ProteinAccessions
@@ -616,30 +635,42 @@ plot_go_bubble <- function(go_df, top_n = 10, title_text = "GO Enrichment Bubble
 plot_go_bubble(Mito_down_go , top_n = 10, title_text = "Top GO Terms (BP)")
 
 # Mito total and heavy DOWN in PERK KO
-#scatter plot of PERK synthesis downreuglated proteins
+Mito_t_down_730 <- df4_cv%>%
+  filter(PG.ProteinAccessions%in% Mito $Entry)%>%
+  filter(total_thg_vs_con< -0.58& total_thg_vs_con_p<0.05&heavy_thg_vs_con< -0.58& heavy_thg_vs_con_p<0.05&HL_thg_vs_con<0,!(light_thg_vs_con < -0.58 & light_thg_vs_con_p < 0.05))
+
+#scatter plot of PERK KO synthesis downreuglated proteins
 plot_mito_scatter_down <- function(Mito_WT, Mito_730, treatment = c("thg", "tun")) {
   treatment <- match.arg(treatment)
-
+  
+  
+  light_col <- paste0("light_", treatment, "_vs_con")
+  light_p   <- paste0("light_", treatment, "_vs_con_p")
   heavy_col <- paste0("heavy_", treatment, "_vs_con")
   heavy_p   <- paste0("heavy_", treatment, "_vs_con_p")
   total_col <- paste0("total_", treatment, "_vs_con")
   total_p   <- paste0("total_", treatment, "_vs_con_p")
-
+  hl_col <- paste0("HL_", treatment, "_vs_con")
+  
   merged_df <- inner_join(
-    Mito_WT %>% select(PG.ProteinAccessions, PG.Genes, all_of(c(heavy_col, heavy_p, total_col, total_p))),
-    Mito_730 %>% select(PG.ProteinAccessions, PG.Genes, all_of(c(heavy_col, heavy_p, total_col, total_p))),
+    Mito_WT %>% select(PG.ProteinAccessions, PG.Genes, all_of(c(light_col, light_p,heavy_col, heavy_p, total_col, total_p,hl_col))),
+    Mito_730 %>% select(PG.ProteinAccessions, PG.Genes, all_of(c(light_col, light_p,heavy_col, heavy_p, total_col, total_p,hl_col))),
     by = "PG.ProteinAccessions",
     suffix = c("_WT", "_730")
   )
-
+  
+ 
   filtered_df <- merged_df %>%
     filter(
       .data[[paste0(heavy_col, "_730")]] < -0.58,
       .data[[paste0(heavy_p, "_730")]] < 0.05,
       .data[[paste0(total_col, "_730")]] < -0.58,
-      .data[[paste0(total_p, "_730")]] < 0.05
+      .data[[paste0(total_p, "_730")]] < 0.05,
+      .data[[paste0(hl_col, "_WT")]] < 0,
+      !(.data[[paste0(light_col, "_WT")]] < -0.58 & .data[[paste0(light_p, "_WT")]] < 0.05)
     )
-
+  
+  
   ggplot(filtered_df, aes_string(x = paste0(heavy_col, "_WT"), y = paste0(heavy_col, "_730"))) +
     geom_point(alpha = 0.6, size = 2, color = "#4a90e2") +
     ggrepel::geom_text_repel(aes(label = PG.Genes_WT), size = 3, max.overlaps = 50) +
@@ -663,10 +694,6 @@ plot_mito_scatter_down <- function(Mito_WT, Mito_730, treatment = c("thg", "tun"
     )
 }
 plot_mito_scatter_down(Mito_WT, Mito_730, treatment = "thg")
-Mito_t_down_730 <- df4_cv%>%
-  filter(PG.ProteinAccessions%in% Mito $Entry)%>%
-  filter(total_thg_vs_con< -0.58& total_thg_vs_con_p<0.05&heavy_thg_vs_con< -0.58& heavy_thg_vs_con_p<0.05)
-
 #GO analysis of PERK synthesis downreuglated proteins
 run_go_analysis <- function(df, title_text = "Input") {
   prot_ids <- df$PG.ProteinAccessions
@@ -696,6 +723,7 @@ run_go_analysis <- function(df, title_text = "Input") {
   return(go_filtered)
 }
 Mito_down_go_730 <- run_go_analysis(Mito_t_down_730)
+View(Mito_down_go_730)
 plot_go_bubble <- function(go_df, top_n = 10, title_text = "GO Enrichment Bubble Plot") {
   if (is.null(go_df)) {
     message("No GO terms to plot.")
@@ -716,14 +744,14 @@ plot_go_bubble <- function(go_df, top_n = 10, title_text = "GO Enrichment Bubble
     scale_size_continuous(name = "Gene Count") +
     labs(
       title = title_text,
-      x = "Fold Enrichment",  
+      x = "Fold Enrichment", 
       y = "GO Term"
     ) +
-    scale_x_continuous(limits = c(20, 275)) + 
+    scale_x_continuous(limits = c(20, 320)) + 
     theme_minimal() +
     theme(
       panel.grid = element_blank(),
-      axis.ticks = element_line(color = "black"), 
+      axis.ticks = element_line(color = "black"),  
       axis.line = element_line(color = "black"), 
       axis.text.y = element_text(size = 12),
       axis.title = element_text(size = 12),
