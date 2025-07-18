@@ -193,7 +193,7 @@ plot_HL_vs_total_by_group <- function(df, df_name, treatment = c("thg", "tun")) 
   total_p_col   <- paste0("total_",  treatment, "_vs_con_p")
   hl_col        <- paste0("HL_",     treatment, "_vs_con")
   
-  # 构建分组并过滤
+  
   df_plot <- df %>%
     select(PG.ProteinAccessions, PG.Genes,
            !!sym(light_fc_col), !!sym(light_p_col),
@@ -224,7 +224,7 @@ plot_HL_vs_total_by_group <- function(df, df_name, treatment = c("thg", "tun")) 
     ) %>%
     filter(!is.na(Light_FC), !is.na(Heavy_FC), !is.na(HL_FC), !is.na(Total_FC))
   
-  # 定义颜色映射
+
   color_map <- c(
     A = "#FF1F5B",  # LightUp + HeavyUp + TotalUp
     B = "#00CD6C",  # LightUp + TotalUp, HeavyNS
@@ -355,7 +355,7 @@ plot_light_heavy_WT <- function(df, df_name, treatment = c("thg", "tun")) {
     ) %>%
     filter(!is.na(Light_FC), !is.na(Heavy_FC), !is.na(HL_FC), !is.na(Total_FC))
   
-  # 定义颜色映射
+  
   color_map <- c(
     A = "#FF1F5B",  # LightUp + HeavyUp + TotalUp
     B = "#00CD6C",  # LightUp + TotalUp, HeavyNS
@@ -443,8 +443,9 @@ plot_light_heavy_WT <- function(df, df_name, treatment = c("thg", "tun")) {
     )
 }
 plot_light_heavy_WT (df3_cv,df_name = "df3_cv", treatment = "thg")
-
-#pink with H/L>0
+plot_light_heavy_WT (df4_cv,df_name = "df4_cv", treatment = "thg")
+             
+#pink with H/L>0 in WT
 df1<-df3_cv%>%
   filter(light_thg_vs_con > 0.58 & light_thg_vs_con_p < 0.05 &
            heavy_thg_vs_con > 0.58 & heavy_thg_vs_con_p  < 0.05 &
@@ -517,7 +518,7 @@ plot_go_bubble <- function(go_df, top_n = 10, title_text = "GO Enrichment Bubble
 }
 plot_go_bubble(df1_go, top_n = 10, title_text = "Top GO Terms (BP)")
 
-#pink with H/L<0
+#pink with H/L<0 in WT
 df2<-df3_cv%>%
   filter(light_thg_vs_con > 0.58 & light_thg_vs_con_p < 0.05 &
            heavy_thg_vs_con > 0.58 & heavy_thg_vs_con_p  < 0.05 &
@@ -563,7 +564,7 @@ plot_go_bubble <- function(go_df, top_n = 10, title_text = "GO Enrichment Bubble
 plot_go_bubble(df2_go, top_n = 10, title_text = "Top GO Terms (BP)")
 
 
-#purple and yellow proteins
+#purple and yellow proteins in WT
 df5<-df3_cv%>%
   filter(
     heavy_thg_vs_con < -0.58 & heavy_thg_vs_con_p < 0.05 &
@@ -613,150 +614,8 @@ plot_go_bubble <- function(go_df, top_n = 10, title_text = "GO Enrichment Bubble
 }
 plot_go_bubble(df5_go, top_n = 10, title_text = "Top GO Terms (BP)")
 
-#uORF protein analysis
-uORF_1 <- read_excel("D:/personal/UVA/Data analysis/202412 SILAC/Fig6/uORF_1.xlsx")
-uORF_df3<-df3_cv%>%
-  filter(PG.ProteinAccessions%in%uORF_1$Entry)
-median_val <- median(uORF_df3$heavy_thg_vs_con, na.rm = TRUE)
-n_val <- sum(!is.na(uORF_df3$heavy_thg_vs_con))
 
-ggplot(uORF_df3, aes(x = heavy_thg_vs_con)) +
-  geom_histogram(binwidth = 0.2, fill = "#b8b8b8", color = "white", boundary = 0) +
-  
-  geom_vline(xintercept = median_val, linetype = "dashed", color = "red", linewidth = 1.2) +
-  geom_vline(xintercept = 0, linetype = "dotted", color = "grey40", linewidth = 1.2) +
-  scale_y_continuous(limits = c(0,45))+
-  scale_x_continuous(limits = c(-2,2))+
-  annotate("text",
-           x = Inf,
-           y = 40,
-           label = paste0("Median = ", round(median_val, 2)),
-           hjust = 1.1, vjust = 1.5,
-           color = "red", size = 4
-  ) +
-  
-  annotate("text",
-           x = Inf, y = Inf,
-           label = paste0("n = ", n_val),
-           hjust = 1.1, vjust = 1.5,
-           size = 4
-  ) +
-  
-  labs(
-    title = "48h combine",
-    x = "Heavy log2(Th/DMSO)",
-    y = "Protein count"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 13),
-    axis.title = element_text(size = 13),
-    axis.text = element_text(size = 11),
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
-    panel.grid = element_blank(),
-    legend.position = "none"  
-  )
-
-#6h data and uORF
-df1 <- read.delim("D:/personal/UVA/Data analysis/202412 SILAC/A012_treated/20250204_132507_A012_SILAC_ALL2_Report with gene.tsv", header = TRUE, sep = "\t")
-filter_6h <- function(df) {
-  ms2_cols <- grep("PG\\.MS2Channel[12]", colnames(df), value = TRUE)
-
-  ms2_6h <- ms2_cols[
-    grepl("thg_[123]\\.raw|tun_[123]\\.raw|con_[456]\\.raw", ms2_cols)
-  ]
-
-  df6h <- df %>%
-    select(PG.ProteinAccessions, PG.Genes, all_of(ms2_6h))
-  
-  return(df6h)
-}
-
-df1_6h <- filter_6h(df1)
-
-df1_6h <- df1_6h %>%
-  rename_with(
-    ~ str_replace_all(
-      gsub("X\\.[0-9]+\\.\\.[0-9]+_(con|tun|thg)_([0-9]+).*MS2Channel([0-9])", 
-           "\\1\\2_Channel\\3", .),
-      c("thg1" = "thg1", "thg2" = "thg2", "thg3" = "thg3",
-        "tun1" = "tun1", "tun2" = "tun2", "tun3" = "tun3",
-        "con4" = "con1", "con5" = "con2", "con6" = "con3")
-    )
-  )
-
-calculate_FC <- function(df) {
-  df %>%
-    
-    rowwise() %>%
-    mutate(
-    
-      con_heavy_mean = safe_mean3(c(con1_Channel2, con2_Channel2, con3_Channel2)),
-      tun_heavy_mean = safe_mean3(c(tun1_Channel2, tun2_Channel2, tun3_Channel2)),
-      thg_heavy_mean = safe_mean3(c(thg1_Channel2, thg2_Channel2, thg3_Channel2)),
-   
-      # log2 fold change
-     
-      heavy_tun_vs_con  = log2(safe_ratio(tun_heavy_mean, con_heavy_mean)),
-      heavy_thg_vs_con  = log2(safe_ratio(thg_heavy_mean, con_heavy_mean)),
-      
-      # p-values using safe_ttest_3
-     
-      heavy_tun_vs_con_p  = safe_ttest_3(c(tun1_Channel2, tun2_Channel2, tun3_Channel2),
-                                         c(con1_Channel2, con2_Channel2, con3_Channel2)),
-      heavy_thg_vs_con_p  = safe_ttest_3(c(thg1_Channel2, thg2_Channel2, thg3_Channel2),
-                                         c(con1_Channel2, con2_Channel2, con3_Channel2)),
-
-    ) %>%
-    ungroup()
-}
-
-df1_6h  <- calculate_FC(df1_6h)
-
-uORF_6h<-df1_6h%>%
-  filter(PG.ProteinAccessions%in%uORF_1$Entry)
-
-median_val_6h <- median(uORF_6h$heavy_thg_vs_con, na.rm = TRUE)
-n_val_6h <- sum(!is.na(uORF_6h$heavy_thg_vs_con))
-
-
-ggplot(uORF_6h, aes(x = heavy_thg_vs_con)) +
-  geom_histogram(binwidth = 0.2, fill = "#b8b8b8", color = "white", boundary = 0) +
-  
-  geom_vline(xintercept = median_val, linetype = "dashed", color = "red", linewidth = 1.2) +
-  geom_vline(xintercept = 0, linetype = "dotted", color = "grey40", linewidth = 1.2) +
-  scale_y_continuous(limits = c(0,45))+
-  scale_x_continuous(limits = c(-2,2))+
-  annotate("text",
-           x = Inf,
-           y = 40,
-           label = paste0("Median = ", round(median_val_6h, 2)),
-           hjust = 1.1, vjust = 1.5,
-           color = "red", size = 4
-  ) +
-  annotate("text",
-           x = Inf, y = Inf,
-           label = paste0("n = ", n_val_6h),
-           hjust = 1.1, vjust = 1.5,
-           size = 4
-  ) +
-  
-  labs(
-    title = "6h alone",
-    x = "Heavy log2(Th/DMSO)",
-    y = "Protein count"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 13),
-    axis.title = element_text(size = 13),
-    axis.text = element_text(size = 11),
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5),
-    panel.grid = element_blank(),
-    legend.position = "none" 
-  )
-
-#light_up, heavy_down and total no change
+#light_up, heavy_down and total no change in WT
 plot_lightup_heavydown_totalns <- function(df3_cv, df4_cv, channel = c("light", "heavy", "total"), treatment = c("tun", "thg")) {
   channel <- match.arg(channel)
   treatment <- match.arg(treatment)
@@ -811,7 +670,8 @@ plot_lightup_heavydown_totalns <- function(df3_cv, df4_cv, channel = c("light", 
   # Color group
   merged_selected <- merged_selected %>%
     mutate(ColorGroup = case_when(
-      .data[[paste0(channel, "_p_df3")]] < 0.05 & .data[[paste0(channel, "_p_df4")]] >= 0.05 ~ "sig_df3",
+      .data[[paste0(channel, "_p_df3")]] < 0.05 &
+        (is.na(.data[[paste0(channel, "_p_df4")]]) | .data[[paste0(channel, "_p_df4")]] >= 0.05)~ "sig_df3",
       .data[[paste0(channel, "_p_df3")]] >= 0.05 & .data[[paste0(channel, "_p_df4")]] < 0.05 ~ "sig_df4",
       .data[[paste0(channel, "_p_df3")]] < 0.05 & .data[[paste0(channel, "_p_df4")]] < 0.05 ~ "both",
       TRUE ~ "ns"
