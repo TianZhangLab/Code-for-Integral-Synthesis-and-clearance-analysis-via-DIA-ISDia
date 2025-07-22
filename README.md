@@ -1,4 +1,4 @@
-# Code-for-Integral-Synthesis-and-Degradation-analysis-via-DIA-ISDia
+# Code-for-Integral-Synthesis-and-clearance-analysis-via-DIA-ISDia
 
 
 # Proteomics Data for Figure Generation (June 2025)
