@@ -1,22 +1,28 @@
 # Code-for-Integral-Synthesis-and-clearance-analysis-via-DIA-ISDia
 
 
-# Proteomics Data for Figure Generation (June 2025)
+# Proteomics Data for Figure Generation (Update in 03 2026)
 
 This repository contains the input data used to generate Figures 1–6. Each figure corresponds to a separate R script and specific input datasets.
 
 ## 📂 Data Overview
 
-### Figures 1 & 2
+### Figures 1 
 
 * **Scripts**:
-  `0626_Figure1.R`, `0626_Figure2.R`
+  `0330_Figure1.R`
 * **Input files**:
 
-  * `DIA_noFAIMS_win2_IT3.5.xlsx`
-  * `DDA_combined_protein_label_quant.xlsx`
+  * `20251207_134746_V196_DIA_all_ratios_Report 1.tsv`
+This file is the original input datasets for generating Figures 1.
 
-These two files are the original input datasets for generating Figures 1 and 2.
+### Figures 2 
+
+* **Scripts**:
+  `0330_Figure2.R`
+* **Input files**:
+  * `20250204_132507_A012_SILAC_ALL2_Report with gene.tsv`
+This file is the original input datasets for generating Figures 2.
 
 ---
 
@@ -33,10 +39,10 @@ These two files are the original input datasets for generating Figures 1 and 2.
 
 * **Scripts**:
 
-  * `0627_Figure3.R`
-  * `0627_Figure4.R`
-  * `0627_Figure5.R`
-  * `0627_Figure6.R`
+  * `0330_Figure3.R`
+  * `0330_Figure4.R`
+  * `0330_Figure5.R`
+  * `Figure6.R`
 
 ---
 
