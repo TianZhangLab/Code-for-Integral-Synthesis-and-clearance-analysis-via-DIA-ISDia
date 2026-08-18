@@ -29,8 +29,10 @@ This file is the original input datasets for generating Figures 2.
 ### Figures 3, 4, 5 & 6
 
 * **Input file**:
+  * "cell growth under ER stress" and " pooled_factors"
+  Used in *Figure 4**
 
-  * `20250402_121853_0327_A012_IT3.5_combine_Report.tsv`
+   * `20250402_121853_0327_A012_IT3.5_combine_Report.tsv`
     Used in **Figure 3**, **Figure 4**, **Figure 5**, and **Figure 6**
 
 * **Additional input for Figures 4, 5, 6**:
