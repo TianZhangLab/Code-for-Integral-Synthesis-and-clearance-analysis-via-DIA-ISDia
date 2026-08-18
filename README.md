@@ -40,7 +40,7 @@ This file is the original input datasets for generating Figures 2.
 * **Scripts**:
 
   * `0330_Figure3.R`
-  * `0330_Figure4.R`
+  * `0814_Figure4.R`
   * `0330_Figure5.R`
   * `Figure6.R`
 
